@@ -1,0 +1,36 @@
+---
+- hosts: all
+  become: true
+  tasks:
+     - name: Create a directory if it does not exist
+       file:
+          path: /opt/webapp
+          state: directory
+          mode: '0755'
+
+     - name: Copy docker file to remote server
+       copy:
+         src: /opt/webapp/Dockerfile
+         dest: /opt/webapp/Dockerfile
+
+     - name: Copy build file to remote server
+       copy:
+         src: /opt/webapp/webapp.war
+         dest: /opt/webapp/webapp.war
+
+     - name: Stop docker container
+       shell: docker stop hello-world
+
+     - name: remove old container
+       shell: docker rm -f hello-world
+
+     - name: Remove old image
+       shell: docker rmi hello-world
+
+     - name: Create docker image and change to docker file directory
+       shell: docker build -t hello-world .
+       args:
+          chdir: /opt/webapp
+
+     - name: Create new container
+       shell: docker run -d --name hello-world -p 8090:8080 hello-world
